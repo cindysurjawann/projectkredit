@@ -1,4 +1,4 @@
-package models
+package model
 
 import "time"
 
@@ -8,7 +8,7 @@ type StagingCustomer struct {
 	ScCreateDate                    time.Time `json:"sc_create_date" gorm:"type:timestamp"`
 	ScBranchCode                    string    `json:"sc_branch_code" gorm:"type:varchar(80)"`
 	ScCompany                       string    `json:"sc_company" gorm:"type:varchar(80)"`
-	ScFlag                          string    `json:"sc_flag" gorm:"type:char;size:1"`
+	ScFlag                          string    `json:"sc_flag" gorm:"type:char"`
 	CustomerPpk                     string    `json:"customer_ppk" gorm:"type:varchar(80)"`
 	CustomerName                    string    `json:"customer_name" gorm:"type:varchar(80)"`
 	CustomerAddress1                string    `json:"customer_address1" gorm:"type:varchar(80)"`

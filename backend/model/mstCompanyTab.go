@@ -1,4 +1,4 @@
-package models
+package model
 
 // int8, int16, int32, int64
 // float32, float64
@@ -16,8 +16,8 @@ type MstCompanyTab struct {
 	BungaEffMax      float32 `json:"bunga_eff_max" gorm:"type:real"`
 	BungaFlatMin     float32 `json:"bunga_flat_min" gorm:"type:real"`
 	BungaFlatMax     float32 `json:"bunga_flat_max" gorm:"type:real"`
-	LAMin            float64 `json:"LA_min" gorm:"type:money"`
-	LAMax            float64 `json:"LA_max" gorm:"type:money"`
+	LAMin            float64 `json:"LA_min" gorm:"type:real"`
+	LAMax            float64 `json:"LA_max" gorm:"type:real"`
 	PeriodeMin       string  `json:"periode_min" gorm:"type:varchar(10)"`
 	PeriodeMax       string  `json:"periode_max" gorm:"type:varchar(10)"`
 }

@@ -1,4 +1,4 @@
-package models
+package model
 
 import (
 	"time"
@@ -9,16 +9,16 @@ import (
 type LoanDataTab struct {
 	Custcode             string    `json:"custcode" gorm:"type:varchar(25); not null; unique"`
 	Branch               string    `json:"branch" gorm:"type:varchar(50)"`
-	OTR                  float64   `json:"otr" gorm:"type:money"`
-	DownPayment          float64   `json:"down_payment" gorm:"type:money"`
-	LoanAmount           float64   `json:"loan_amount" gorm:"type:money"`
+	OTR                  float64   `json:"otr" gorm:"type:real"`
+	DownPayment          float64   `json:"down_payment" gorm:"type:real"`
+	LoanAmount           float64   `json:"loan_amount" gorm:"type:real"`
 	LoanPeriod           string    `json:"loan_period" gorm:"type:varchar(6)"`
 	InterestType         int8      `json:"interest_type" gorm:"type:smallint"`
 	InterestFlat         float32   `json:"interest_flat" gorm:"type:real"`
 	InterestEffective    float32   `json:"interest_effective" gorm:"type:real"`
 	EffectivePaymentType int8      `json:"effective_payment_type" gorm:"type:smallint"`
-	AdminFee             float64   `json:"admin_fee" gorm:"type:money"`
-	MonthlyPayment       float64   `json:"monthly_payment" gorm:"type:money"`
+	AdminFee             float64   `json:"admin_fee" gorm:"type:real"`
+	MonthlyPayment       float64   `json:"monthly_payment" gorm:"type:real"`
 	InputtDate           time.Time `json:"input_date" gorm:"type:timestamp"`
 	LasttModified        time.Time `json:"last_modified" gorm:"type:timestamp"`
 	ModifieddBy          string    `json:"modified_by" gorm:"type:varchar(20)"`
