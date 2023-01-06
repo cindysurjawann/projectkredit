@@ -2,6 +2,7 @@ package api
 
 import (
 	"kredit/backend/generateCustomer"
+	"kredit/backend/generateSkala"
 
 	"github.com/gin-contrib/cors"
 )
@@ -16,5 +17,10 @@ func (s *server) SetupRouter() {
 	generateCustomerRepo := generateCustomer.NewRepository(s.DB)
 	generateCustomerService := generateCustomer.NewService(generateCustomerRepo)
 	generateCustomerHandler := generateCustomer.NewHandler(generateCustomerService)
-	s.Router.GET("/getStagingCustomer", generateCustomerHandler.GetStagingCustomer)
+	s.Router.GET("/validateStagingCustomer", generateCustomerHandler.ValidateStagingCustomer)
+
+	generateSkalaRepo := generateSkala.NewRepository(s.DB)
+	generateSkalaService := generateSkala.NewService(generateSkalaRepo)
+	generateSkalaHandler := generateSkala.NewHandler(generateSkalaService)
+	s.Router.GET("/generateSkalaRentalTab", generateSkalaHandler.GenerateSkalaRentalTab)
 }

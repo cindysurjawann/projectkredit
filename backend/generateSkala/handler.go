@@ -1,4 +1,4 @@
-package generateCustomer
+package generateSkala
 
 import "github.com/gin-gonic/gin"
 
@@ -10,8 +10,8 @@ func NewHandler(service Service) *Handler {
 	return &Handler{service}
 }
 
-func (h *Handler) ValidateStagingCustomer(c *gin.Context) {
-	customer, status, err := h.Service.ValidateStagingCustomer()
+func (h *Handler) GenerateSkalaRentalTab(c *gin.Context) {
+	skala, status, err := h.Service.GenerateSkalaRentalTab()
 	if err != nil {
 		c.JSON(status, gin.H{
 			"message": err.Error(),
@@ -20,6 +20,6 @@ func (h *Handler) ValidateStagingCustomer(c *gin.Context) {
 	}
 	c.JSON(status, gin.H{
 		"message": "success",
-		"data":    customer,
+		"data":    skala,
 	})
 }

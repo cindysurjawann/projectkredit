@@ -6,7 +6,7 @@ import (
 )
 
 type Service interface {
-	GetStagingCustomer() ([]model.StagingCustomer, int, error)
+	ValidateStagingCustomer() ([]model.StagingCustomer, int, error)
 }
 
 type service struct {
@@ -17,8 +17,8 @@ func NewService(repo CustomerRepository) *service {
 	return &service{repo}
 }
 
-func (s *service) GetStagingCustomer() ([]model.StagingCustomer, int, error) {
-	customer, err := s.repo.GetStagingCustomer()
+func (s *service) ValidateStagingCustomer() ([]model.StagingCustomer, int, error) {
+	customer, err := s.repo.ValidateStagingCustomer()
 	if err != nil {
 		return nil, http.StatusInternalServerError, err
 	}

@@ -13,7 +13,7 @@ import (
 )
 
 type CustomerRepository interface {
-	GetStagingCustomer() ([]model.StagingCustomer, error)
+	ValidateStagingCustomer() ([]model.StagingCustomer, error)
 }
 
 type repository struct {
@@ -24,7 +24,7 @@ func NewRepository(db *gorm.DB) *repository {
 	return &repository{db}
 }
 
-func (r *repository) GetStagingCustomer() ([]model.StagingCustomer, error) {
+func (r *repository) ValidateStagingCustomer() ([]model.StagingCustomer, error) {
 	var StagingCustomer []model.StagingCustomer
 	currentTime := time.Now()
 	currentDate := currentTime.Format("2006-01-02")
@@ -89,24 +89,11 @@ func (r *repository) GetStagingCustomer() ([]model.StagingCustomer, error) {
 		}
 
 		//7. validate bpkb gaboleh kosong
-		if err := ValidateBpkb(data.VehicleBpkb); err != nil {
-			if err := r.UpdateWhenValidateFails(data, "BPKB kosong"); err != nil {
-				return nil, err
-			}
-			continue
-		}
-
 		//8. validate stnk gaboleh kosong
-		if err := ValidateStnk(data.VehicleStnk); err != nil {
-			if err := r.UpdateWhenValidateFails(data, "STNK kosong"); err != nil {
-				return nil, err
-			}
-			continue
-		}
-
 		//9. validate vehicle engine no gaboleh kosong
-		if err := ValidateEngineNo(data.VehicleEngineNo); err != nil {
-			if err := r.UpdateWhenValidateFails(data, "Vehicle Engine No kosong"); err != nil {
+		//11. validate chasis no gaboleh kosong
+		if err := ValidateValueKosong(data); err != nil {
+			if err := r.UpdateWhenValidateFails(data, "Data Mandatory kosong"); err != nil {
 				return nil, err
 			}
 			continue
@@ -120,14 +107,6 @@ func (r *repository) GetStagingCustomer() ([]model.StagingCustomer, error) {
 			continue
 		} else if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, err
-		}
-
-		//11. validate chasis no gaboleh kosong
-		if err := ValidateChasisNo(data.VehicleChasisNo); err != nil {
-			if err := r.UpdateWhenValidateFails(data, "Vehicle Chasis No kosong"); err != nil {
-				return nil, err
-			}
-			continue
 		}
 
 		//12. validate chasis no tidak boleh duplikasi
@@ -160,14 +139,19 @@ func (r *repository) UpdateWhenValidateFails(data model.StagingCustomer, errorDe
 }
 
 func (r *repository) UpdateWhenValidateSuccess(data model.StagingCustomer) error {
-	if err := r.InsertCustomerDataTab(data); err != nil {
-		return errors.New("gagal insert customer_data_tab")
+	custcode := ""
+	var err error
+	if custcode, err = r.GenerateCustCode(data.ScCompany); err != nil {
+		return err
 	}
-	if err := r.InsertLoanDataTab(data); err != nil {
+	if err := r.InsertCustomerDataTab(data, custcode); err != nil {
+		return err
+	}
+	if err := r.InsertLoanDataTab(data, custcode); err != nil {
 		return errors.New("gagal insert loan_data_tab")
 	}
-	if err := r.InsertVehicleDataTab(data); err != nil {
-		return err
+	if err := r.InsertVehicleDataTab(data, custcode); err != nil {
+		return errors.New("gagal insert vehicle_data_tab")
 	}
 	if err := r.UpdateScFlag(data.Id, "1"); err != nil {
 		return errors.New("gagal update sc flag final")
@@ -197,8 +181,9 @@ func (r *repository) InsertStagingError(data model.StagingCustomer, errorDesc st
 	return insertStagingError.Error
 }
 
-func (r *repository) InsertCustomerDataTab(data model.StagingCustomer) error {
-	idType, err, tglPkChanneling, drawdownDate, birthDate := int64(0), errors.New("initialize error"), time.Now(), time.Now(), time.Now()
+func (r *repository) InsertCustomerDataTab(data model.StagingCustomer, custcode string) error {
+	idType, tglPkChanneling, drawdownDate, birthDate := int64(0), time.Now(), time.Now(), time.Now()
+	var err error
 	if birthDate, err = ConvertStringtoDateTime(data.CustomerBirthDate); err != nil {
 		return err
 	}
@@ -213,8 +198,8 @@ func (r *repository) InsertCustomerDataTab(data model.StagingCustomer) error {
 	}
 	fmt.Println("InsertCustomerDataTab", idType, err, tglPkChanneling, drawdownDate, birthDate)
 	customerDataTab := model.CustomerDataTab{
-		Custcode:          "C00" + strconv.FormatInt(data.Id, 10),
-		PPK:               data.CustomerPpk,
+		Custcode:          custcode,
+		PPK:               strings.TrimSpace(data.CustomerPpk),
 		Name:              data.CustomerName,
 		Address1:          data.CustomerAddress1,
 		Address2:          data.CustomerAddress2,
@@ -236,8 +221,9 @@ func (r *repository) InsertCustomerDataTab(data model.StagingCustomer) error {
 	return insertCustomerDataTab.Error
 }
 
-func (r *repository) InsertLoanDataTab(data model.StagingCustomer) error {
-	err, interestflat, interesteffective, effpaymenttype := errors.New("initialize error"), 0.1, 0.1, int64(0)
+func (r *repository) InsertLoanDataTab(data model.StagingCustomer, custcode string) error {
+	interestflat, interesteffective, effpaymenttype := 0.1, 0.1, int64(0)
+	var err error
 	if interestflat, err = ConvertStringtoFloat(data.LoanInterestFlatChanneling); err != nil {
 		return err
 	}
@@ -249,7 +235,7 @@ func (r *repository) InsertLoanDataTab(data model.StagingCustomer) error {
 	}
 	fmt.Println("InsertLoanDataTab", err, interestflat, interesteffective, effpaymenttype)
 	loanDataTab := model.LoanDataTab{
-		Custcode:             "C00" + strconv.FormatInt(data.Id, 10),
+		Custcode:             custcode,
 		Branch:               data.ScBranchCode,
 		DownPayment:          data.LoanDownPayment,
 		LoanAmount:           data.LoanLoanAmountChanneling,
@@ -275,8 +261,9 @@ func (r *repository) InsertLoanDataTab(data model.StagingCustomer) error {
 	return insertLoanDataTab.Error
 }
 
-func (r *repository) InsertVehicleDataTab(data model.StagingCustomer) error {
-	vehicleType, err, vehicleStatus, dealerId, tglStnk, tglBpkb, collateralId := int64(0), errors.New("initialize error"), int64(0), int64(0), time.Now(), time.Now(), int64(0)
+func (r *repository) InsertVehicleDataTab(data model.StagingCustomer, custcode string) error {
+	vehicleType, vehicleStatus, dealerId, tglStnk, tglBpkb, collateralId := int64(0), int64(0), int64(0), time.Now(), time.Now(), int64(0)
+	var err error
 
 	if vehicleType, err = ConvertStringtoInt(data.VehicleType); err != nil {
 		return err
@@ -299,7 +286,7 @@ func (r *repository) InsertVehicleDataTab(data model.StagingCustomer) error {
 
 	fmt.Println("InsertVehicleDataTab", vehicleType, err, vehicleStatus, dealerId, tglStnk, tglBpkb, collateralId)
 	vehicleDataTab := model.VehicleDataTab{
-		Custcode:       "C00" + strconv.FormatInt(data.Id, 10),
+		Custcode:       custcode,
 		Brand:          int(vehicleType),
 		Type:           data.VehicleBrand,
 		Year:           data.VehicleYear,
@@ -338,6 +325,53 @@ func (r *repository) InsertVehicleDataTab(data model.StagingCustomer) error {
 	return insertVehicleDataTab.Error
 }
 
+func (r *repository) GenerateCustCode(companyName string) (string, error) {
+	//006.a09.201912.0002820967
+	appCustCode := "006"
+	lengthCustcodeSeq := 10
+	var MstCompanyTab model.MstCompanyTab
+	var GeneralParameter model.GeneralParameter
+	custCodeInt := int64(0)
+
+	//get company code
+	err := r.db.Where("company_name=?", companyName).First(&MstCompanyTab).Error
+	if err != nil {
+		return "", errors.New("get company code gagal")
+	}
+	companyResult := &MstCompanyTab
+
+	//get yyyyMM now
+	time := time.Now()
+	timeNow := time.Format("200601")
+
+	//get CustCodeSeq
+	err = r.db.Where("parameter=?", "CustCodeSeq").First(&GeneralParameter).Error
+	if err != nil {
+		return "", errors.New("gagal get custcode sequence")
+	}
+	custCode := &GeneralParameter
+
+	//get appCustCodeSeq
+	appCustCodeSeq := "0000000000" + custCode.Value
+	appCustCodeSeq = appCustCodeSeq[len(appCustCodeSeq)-lengthCustcodeSeq:]
+
+	//increment CustCodeSeq
+	if custCodeInt, err = ConvertStringtoInt(custCode.Value); err != nil {
+		return "", errors.New("gagal convert custcodeseq to int")
+	}
+	custCodeInt = custCodeInt + 1
+	updateGeneralParameter := model.GeneralParameter{
+		Value: strconv.FormatInt(custCodeInt, 10),
+	}
+	err = r.db.Model(&model.GeneralParameter{}).Where("parameter=?", "CustCodeSeq").Updates(updateGeneralParameter).Error
+	if err != nil {
+		return "", errors.New("gagal update custcode sequence")
+	}
+
+	custcode := appCustCode + companyResult.CompanyCode + timeNow + appCustCodeSeq
+	return custcode, nil
+}
+
 func (r *repository) ValidateCustomerPPK(CustomerPpk string) error {
 	//CUSTOMER_PPK tidak boleh duplikasi pada table Customer_data_tab Field “PPK”
 	var CustomerDataTab model.CustomerDataTab
@@ -365,11 +399,12 @@ func (r *repository) ValidateBranchCode(scBranchCode string) error {
 func ValidateLoanTglPk(loanTglPk string) error {
 	//TGL_PK / DRAWDOWN_DATE tidak boleh berbeda bulan dengan bulan berjalan saat ini
 	//contoh: saat ini bulan Januari 2023 maka bulan TGL_PK tidak boleh berbeda dengan bulan Januari 2023
-	drawdownDate, err, currentDateTime := time.Now(), errors.New("initialize error"), time.Now()
+	drawdownDate, currentDateTime := time.Now(), time.Now()
+	var err error
 	if drawdownDate, err = ConvertStringtoDate(loanTglPk); err != nil {
 		return err
 	}
-	fmt.Println("ValidateLoanTglPk", err)
+	fmt.Println("ValidateLoanTglPk", err, drawdownDate)
 
 	if drawdownDate.Year() != currentDateTime.Year() {
 		return errors.New("drawdown year berbeda")
@@ -401,26 +436,10 @@ func ValidateNamaDebitur(customerName string) error {
 	return nil
 }
 
-func ValidateBpkb(vehicleBpkb string) error {
-	//VEHICLE_BPKB tidak boleh kosong
-	if vehicleBpkb == "" {
-		return errors.New("bpkb kosong")
-	}
-	return nil
-}
-
-func ValidateStnk(vehicleStnk string) error {
-	//	VEHICLE_STNK tidak boleh kosong
-	if vehicleStnk == "" {
-		return errors.New("stnk kosong")
-	}
-	return nil
-}
-
-func ValidateEngineNo(vehicleEngineNo string) error {
-	//	VEHICLE_ENGINE_NO tidak boleh kosong
-	if vehicleEngineNo == "" {
-		return errors.New("vehicle engine no kosong")
+func ValidateValueKosong(data model.StagingCustomer) error {
+	//VEHICLE_BPKB, VEHICLE_STNK, VEHICLE_ENGINE_NO, VEHICLE_CHASIS_NO tidak boleh kosong
+	if data.VehicleBpkb == "" || data.VehicleStnk == "" || data.VehicleEngineNo == "" || data.VehicleChasisNo == "" {
+		return errors.New("data kosong")
 	}
 	return nil
 }
@@ -431,14 +450,6 @@ func (r *repository) ValidateDuplicateEngineNo(vehicleEngineNo string) error {
 	validasiEngineNo := r.db.Where("engine_no=?", vehicleEngineNo).First(&VehicleDataTab)
 
 	return validasiEngineNo.Error
-}
-
-func ValidateChasisNo(vehicleChasisNo string) error {
-	//	VEHICLE_CHASIS_NO Tidak Boleh Kosong
-	if vehicleChasisNo == "" {
-		return errors.New("vehicle chasis no kosong")
-	}
-	return nil
 }
 
 func (r *repository) ValidateDuplicateChasisNo(vehicleChasisNo string) error {
@@ -454,7 +465,7 @@ func ConvertStringtoInt(input string) (int64, error) {
 		return 0, nil
 	}
 	input = strings.TrimSpace(input)
-	result, err := strconv.ParseInt(input, 10, 8)
+	result, err := strconv.ParseInt(input, 10, 64)
 	return result, err
 }
 
