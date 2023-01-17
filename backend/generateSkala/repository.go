@@ -50,14 +50,20 @@ func (r *repository) GenerateSkalaRentalTab() ([]model.CustomerDataTab, error) {
 
 		//insert data sebanyak 0-counter
 		for i := int64(0); i <= counter; i++ {
-			i, principle, interest, endBalanceLastInt, endBalance, rentalInt, dueDate, loanDataResult, data, err = r.InsertSkalaRentalTab(i, principle, interest, endBalanceLastInt, endBalance, rentalInt, dueDate, loanDataResult, data)
+			i, principle, interest, endBalanceLastInt, endBalance, rentalInt, dueDate, loanDataResult, data, err = r.InsertSkalaRentalTab(i, counter, principle, interest, endBalanceLastInt, endBalance, rentalInt, dueDate, loanDataResult, data)
 			if err != nil {
 				return nil, errors.New("gagal insert ke skala rental tab")
 			}
 			//finalisasi data
 			endBalanceLastInt = endBalance
 			//update approval status
+			if i == counter {
+				if err := r.UpdateApprovalStatus(data.Custcode, "1"); err != nil {
+					return nil, errors.New("gagal update approval status")
+				}
+			}
 		}
+
 	}
 
 	return CustomerDataTab, nil
@@ -80,6 +86,12 @@ func (r *repository) GetLoanPeriod(data model.CustomerDataTab) (*model.LoanDataT
 	return loanDataResult, counter, nil
 }
 
+func (r *repository) UpdateApprovalStatus(custcode string, approvalStatus string) error {
+	var CustomerDataTab []model.CustomerDataTab
+	update := r.db.Model(&CustomerDataTab).Where("custcode=?", custcode).Update("approval_status", approvalStatus)
+	return update.Error
+}
+
 func InitializeSkalaRental(loanDataResult *model.LoanDataTab) (int64, int64, int64, int64, int64, time.Time, error) {
 	//hitung monthly payment jika 0
 	var principle, interest, endBalanceLastInt, endBalance, rentalInt int64
@@ -94,7 +106,7 @@ func InitializeSkalaRental(loanDataResult *model.LoanDataTab) (int64, int64, int
 	return principle, interest, endBalanceLastInt, endBalance, rentalInt, dueDate, nil
 }
 
-func (r *repository) InsertSkalaRentalTab(i int64, principle int64, interest int64, endBalanceLastInt int64, endBalance int64, rentalInt int64, dueDate time.Time, loanDataResult *model.LoanDataTab, data model.CustomerDataTab) (int64, int64, int64, int64, int64, int64, time.Time, *model.LoanDataTab, model.CustomerDataTab, error) {
+func (r *repository) InsertSkalaRentalTab(i int64, counter int64, principle int64, interest int64, endBalanceLastInt int64, endBalance int64, rentalInt int64, dueDate time.Time, loanDataResult *model.LoanDataTab, data model.CustomerDataTab) (int64, int64, int64, int64, int64, int64, time.Time, *model.LoanDataTab, model.CustomerDataTab, error) {
 	if i == 0 {
 		interest = 0
 		principle = 0
@@ -105,6 +117,11 @@ func (r *repository) InsertSkalaRentalTab(i int64, principle int64, interest int
 		interest = (endBalanceLastInt * int64(loanDataResult.InterestEffective) * 30) / 36000
 		principle = rentalInt - interest
 		endBalance = endBalanceLastInt - principle
+	}
+	if i == counter && endBalance < 0 {
+		principle = principle + endBalance
+		interest = rentalInt - principle
+		endBalance = 0
 	}
 	SkalaRentalTab := model.SkalaRentalTab{
 		Counter:    int8(i),
