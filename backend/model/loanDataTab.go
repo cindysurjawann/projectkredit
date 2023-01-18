@@ -7,7 +7,7 @@ import (
 // int8, int16, int32, int64
 // float32, float64
 type LoanDataTab struct {
-	Custcode             string    `json:"custcode" gorm:"type:varchar(25); not null; unique"`
+	Custcode             string    `json:"custcode" gorm:"type:varchar(25); not null; unique; primaryKey"`
 	Branch               string    `json:"branch" gorm:"type:varchar(50)"`
 	OTR                  string    `json:"otr" gorm:"type:money"`
 	DownPayment          string    `json:"down_payment" gorm:"type:money"`

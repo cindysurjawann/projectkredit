@@ -34,7 +34,7 @@ func SetupDB() (*gorm.DB, error) {
 	}
 
 	if os.Getenv("AUTO_MIGRATE") == "Y" {
-		if err := db.AutoMigrate(model.BranchTab{}, model.CustomerDataTab{}, model.LoanDataTab{}, model.MstCompanyTab{}, model.SkalaRentalTab{}, model.StagingCustomer{}, model.StagingError{}, model.VehicleDataTab{}, model.GeneralParameter{}); err != nil {
+		if err := db.AutoMigrate(model.BranchTab{}, model.CustomerDataTab{}, model.LoanDataTab{}, model.MstCompanyTab{}, model.SkalaRentalTab{}, model.StagingCustomer{}, model.StagingError{}, model.VehicleDataTab{}, model.GeneralParameter{}, model.User{}); err != nil {
 			return nil, fmt.Errorf("failed to migrate database: %w", err)
 		}
 	}
