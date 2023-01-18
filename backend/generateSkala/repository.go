@@ -27,7 +27,7 @@ func NewRepository(db *gorm.DB) *repository {
 func (r *repository) GenerateSkalaRentalTab() ([]model.CustomerDataTab, error) {
 	//Get data yang “approval_status” = 0
 	var CustomerDataTab []model.CustomerDataTab
-	rows := r.db.Where("approval_status=?", "0").Find(&CustomerDataTab)
+	rows := r.db.Preload("LoanDataTab").Where("approval_status=?", "0").Find(&CustomerDataTab)
 	if rows.Error != nil {
 		if errors.Is(rows.Error, gorm.ErrRecordNotFound) {
 			return nil, errors.New("data to proceed not found")
@@ -37,10 +37,11 @@ func (r *repository) GenerateSkalaRentalTab() ([]model.CustomerDataTab, error) {
 
 	//proses insert ke skala_rental_tab
 	for _, data := range CustomerDataTab {
-		//ambil loan period (counter)
-		loanDataResult, counter, err := r.GetLoanPeriod(data)
-		if err != nil {
-			return nil, errors.New("gagal get loan period")
+		loanDataResult := data.LoanDataTab
+		var counter int64
+		var err error
+		if counter, err = generateCustomer.ConvertStringtoInt(loanDataResult.LoanPeriod); err != nil {
+			return nil, errors.New("gagal convert loan period")
 		}
 		//inisialisasi data
 		principle, interest, endBalanceLastInt, endBalance, rentalInt, dueDate, err := InitializeSkalaRental(loanDataResult)
@@ -69,30 +70,13 @@ func (r *repository) GenerateSkalaRentalTab() ([]model.CustomerDataTab, error) {
 	return CustomerDataTab, nil
 }
 
-func (r *repository) GetLoanPeriod(data model.CustomerDataTab) (*model.LoanDataTab, int64, error) {
-	var LoanDataTab model.LoanDataTab
-	err := r.db.Where("custcode=?", data.Custcode).First(&LoanDataTab).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return &LoanDataTab, 0, errors.New("loan period not found")
-		}
-		return &LoanDataTab, 0, err
-	}
-	loanDataResult := &LoanDataTab
-	counter := int64(0)
-	if counter, err = generateCustomer.ConvertStringtoInt(loanDataResult.LoanPeriod); err != nil {
-		return &LoanDataTab, 0, errors.New("gagal convert loan period")
-	}
-	return loanDataResult, counter, nil
-}
-
 func (r *repository) UpdateApprovalStatus(custcode string, approvalStatus string) error {
 	var CustomerDataTab []model.CustomerDataTab
 	update := r.db.Model(&CustomerDataTab).Where("custcode=?", custcode).Update("approval_status", approvalStatus)
 	return update.Error
 }
 
-func InitializeSkalaRental(loanDataResult *model.LoanDataTab) (int64, int64, int64, int64, int64, time.Time, error) {
+func InitializeSkalaRental(loanDataResult model.LoanDataTab) (int64, int64, int64, int64, int64, time.Time, error) {
 	//hitung monthly payment jika 0
 	var principle, interest, endBalanceLastInt, endBalance, rentalInt int64
 	var dueDate time.Time
@@ -106,7 +90,9 @@ func InitializeSkalaRental(loanDataResult *model.LoanDataTab) (int64, int64, int
 	return principle, interest, endBalanceLastInt, endBalance, rentalInt, dueDate, nil
 }
 
-func (r *repository) InsertSkalaRentalTab(i int64, counter int64, principle int64, interest int64, endBalanceLastInt int64, endBalance int64, rentalInt int64, dueDate time.Time, loanDataResult *model.LoanDataTab, data model.CustomerDataTab) (int64, int64, int64, int64, int64, int64, time.Time, *model.LoanDataTab, model.CustomerDataTab, error) {
+func (r *repository) InsertSkalaRentalTab(
+	i int64, counter int64, principle int64, interest int64, endBalanceLastInt int64, endBalance int64, rentalInt int64, dueDate time.Time, loanDataResult model.LoanDataTab, data model.CustomerDataTab) (
+	int64, int64, int64, int64, int64, int64, time.Time, model.LoanDataTab, model.CustomerDataTab, error) {
 	if i == 0 {
 		interest = 0
 		principle = 0

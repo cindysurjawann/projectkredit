@@ -15,21 +15,24 @@ import {
   faExchange,
   faBook,
   faCheck,
+  faLock,
 } from '@fortawesome/free-solid-svg-icons'
 import { Routes } from "react-router-dom";
 import Login from "./components/Login";
 import Pencairan from "./components/Pencairan";
 import Laporan from "./components/Laporan";
+import ChangePassword from "./components/ChangePassword";
 import Popup from 'reactjs-popup';
 import axios from "axios";
+import Home from './components/Home';
 
 function App() {
   const [isLoggedIn, setLogin] = useState()
   const [userName, setUserName] = useState("")
   const [isCollapsed, setIsCollapsed] = useState(true)
-  const [activeMenu, setActiveMenu] = useState("transaksi")
+  const [activeMenu, setActiveMenu] = useState("")
   const [show, setShow] = useState(false)
-  
+
   const handleClose = () => setShow(false)
   const handleShow = () => setShow(true)
 
@@ -44,7 +47,7 @@ function App() {
     axios.get("http://localhost:8080/findUser?userId=" + localStorage.getItem("user_id"))
       .then((response) => {
         setUserName(response.data.name)
-      }). catch(function (error) {
+      }).catch(function (error) {
         console.log(error)
         setUserName("please reload this site")
       })
@@ -59,11 +62,11 @@ function App() {
     if (isCollapsed) {
       navTrigger.style.width = "110px"
 
-      for (let i=0;i<triggerDiv.length;i+=1){
+      for (let i = 0; i < triggerDiv.length; i += 1) {
         triggerDiv[i].style.display = 'none';
       }
-  
-      for (let i=0;i<triggerSvg.length;i+=1){
+
+      for (let i = 0; i < triggerSvg.length; i += 1) {
         triggerSvg[i].style.paddingRight = "0"
         triggerSvg[i].style.textAlign = "center"
         triggerSvg[i].style.width = "100%"
@@ -71,15 +74,15 @@ function App() {
 
     } else {
       navTrigger.style.width = "350px"
-      
-      
-      for (let i=0;i<triggerSvg.length;i+=1){
+
+
+      for (let i = 0; i < triggerSvg.length; i += 1) {
         triggerSvg[i].style.removeProperty("width")
         triggerSvg[i].style.paddingRight = "1rem"
         triggerSvg[i].style.removeProperty("textAlign")
       }
-      
-      for (let i=0;i<triggerDiv.length;i+=1){
+
+      for (let i = 0; i < triggerDiv.length; i += 1) {
         triggerDiv[i].style.display = "inline-block"
       }
     }
@@ -91,14 +94,14 @@ function App() {
   }, [])
 
   if (!isLoggedIn) {
-    return(
+    return (
       <>
         <HashRouter>
           <Routes>
-            <Route path="/" element={ <Login /> }/>
-            <Route path="*" element={<Navigate to ="/" />}/>
+            <Route path="/" element={<Login />} />
+            <Route path="*" element={<Navigate to="/" />} />
           </Routes>
-        </HashRouter> 
+        </HashRouter>
       </>
     )
   }
@@ -118,44 +121,52 @@ function App() {
                   </div>
                 </div>
                 <div className="menubar-list">
-                    <Popup 
-                        trigger={
-                          <Nav.Link  
-                            className={activeMenu == "transaksi" ? "nav-active": ""}>
-                              <FontAwesomeIcon className="eventCollapse2" icon={faExchange}/><span className="eventCollapse">Transaksi</span>
-                          </Nav.Link>
-                        } 
-                        position="right center" 
-                        on="click"
-                      >
-                        <div className='navLinkPopup'>
-                          <Nav.Link 
-                            href="#/" 
-                            onClick={() => setActiveMenu("transaksi")} >
-                              <FontAwesomeIcon className="eventCollapse2" icon={faCheck}/><span className="eventCollapse">   Checklist Pencairan</span>
-                          </Nav.Link>
-                          </div>
-                      </Popup>
-                    <Nav.Link 
-                      href="#/Laporan" 
-                      onClick={() => setActiveMenu("laporan")} 
-                      className={activeMenu == "laporan" ? "nav-active": ""}>
-                        <FontAwesomeIcon className="eventCollapse2" icon={faBook}/><span className="eventCollapse">Laporan</span>
-                    </Nav.Link>
-                    <hr className="text-white"></hr>
-                    <Nav.Link 
-                      onClick={() => handleShow()}>
-                        <FontAwesomeIcon className="eventCollapse2" icon={faRightFromBracket}/><span className="eventCollapse">Log out</span>
-                    </Nav.Link>
-                    <hr></hr>
+                  <Popup
+                    trigger={
+                      <Nav.Link
+                        className={activeMenu == "transaksi" ? "nav-active" : ""}>
+                        <FontAwesomeIcon className="eventCollapse2" icon={faExchange} /><span className="eventCollapse">Transaksi</span>
+                      </Nav.Link>
+                    }
+                    position="right center"
+                    on="click"
+                  >
+                    <div className='navLinkPopup'>
+                      <Nav.Link
+                        href="#/Pencairan"
+                        onClick={() => setActiveMenu("transaksi")} >
+                        <FontAwesomeIcon className="eventCollapse2" icon={faCheck} /><span className="eventCollapse">   Checklist Pencairan</span>
+                      </Nav.Link>
+                    </div>
+                  </Popup>
+                  <Nav.Link
+                    href="#/Laporan"
+                    onClick={() => setActiveMenu("laporan")}
+                    className={activeMenu == "laporan" ? "nav-active" : ""}>
+                    <FontAwesomeIcon className="eventCollapse2" icon={faBook} /><span className="eventCollapse">Laporan</span>
+                  </Nav.Link>
+                  <hr className="text-white"></hr>
+                  <Nav.Link
+                    href="#/ChangePassword"
+                    onClick={() => setActiveMenu("changePassword")}
+                    className={activeMenu == "changePassword" ? "nav-active" : ""}>
+                    <FontAwesomeIcon className="eventCollapse2" icon={faLock} /><span className="eventCollapse">Ubah Password</span>
+                  </Nav.Link>
+                  <Nav.Link
+                    onClick={() => handleShow()}>
+                    <FontAwesomeIcon className="eventCollapse2" icon={faRightFromBracket} /><span className="eventCollapse">Keluar</span>
+                  </Nav.Link>
+                  <hr></hr>
                 </div>
               </Nav>
             </div>
             <div className="content">
               <Routes>
-                <Route path="/" element={ <Pencairan/> }/>
-                <Route path="/Laporan" element={ <Laporan/> }/>
-                <Route path="*" element={<Pencairan/>}/>
+                <Route path="/" element={<Home />} />
+                <Route path="/Pencairan" element={<Pencairan />} />
+                <Route path="/Laporan" element={<Laporan />} />
+                <Route path="/ChangePassword" element={<ChangePassword />} />
+                <Route path="*" element={<Pencairan />} />
               </Routes>
             </div>
           </div>
