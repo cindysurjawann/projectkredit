@@ -26,6 +26,9 @@ func (s *server) SetupRouter() {
 	checklistPencairanService := checklistPencairan.NewService(checklistPencairanRepo)
 	checklistPencairanHandler := checklistPencairan.NewHandler(checklistPencairanService)
 	s.Router.GET("/getChecklistPengajuan", checklistPencairanHandler.FindPengajuanByApprovalStatus)
+	s.Router.GET("/getChecklistPengajuanFiltered", checklistPencairanHandler.FindPengajuanByFilter)
+	s.Router.GET("/getBranchList", checklistPencairanHandler.GetBranchList)
+	s.Router.GET("/getCompanyList", checklistPencairanHandler.GetCompanyList)
 
 	generateCustomerRepo := generateCustomer.NewRepository(s.DB)
 	generateCustomerService := generateCustomer.NewService(generateCustomerRepo)
