@@ -12,6 +12,10 @@ body {
   background-color: #cc100f !important;
 }
 
+.backgroundGreen {
+  background-color: green !important;
+}
+
 .backgroundBlack {
   background-color: black !important;
 }

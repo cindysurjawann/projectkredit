@@ -13,6 +13,7 @@ type PencairanRepository interface {
 	FindPengajuanByFilter(approval_status string, branch string, company string, startDate time.Time, endDate time.Time) ([]model.CustomerDataTab, error)
 	GetBranchList() ([]model.BranchTab, error)
 	GetCompanyList() ([]model.MstCompanyTab, error)
+	UpdateApprovalStatus(CustomerDataTabUpdate []model.CustomerDataTab, approval_status string) ([]model.CustomerDataTab, error)
 }
 
 type repository struct {
@@ -105,4 +106,16 @@ func (r *repository) GetCompanyList() ([]model.MstCompanyTab, error) {
 	MstCompanyTab = append([]model.MstCompanyTab{FirstList}, MstCompanyTab...)
 
 	return MstCompanyTab, nil
+}
+
+func (r *repository) UpdateApprovalStatus(CustomerDataTabUpdate []model.CustomerDataTab, approval_status string) ([]model.CustomerDataTab, error) {
+	for _, data := range CustomerDataTabUpdate {
+		cdt := r.db.Where("ppk=?", data.PPK).Updates(model.CustomerDataTab{
+			ApprovalStatus: approval_status,
+		})
+		if cdt.Error != nil {
+			return nil, cdt.Error
+		}
+	}
+	return CustomerDataTabUpdate, nil
 }

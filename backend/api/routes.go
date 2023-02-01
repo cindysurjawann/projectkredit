@@ -12,7 +12,7 @@ import (
 func (s *server) SetupRouter() {
 	s.Router.Use(cors.New(cors.Config{
 		AllowOrigins: []string{"*"},
-		AllowMethods: []string{"POST", "GET", "DELETE", "PUT"},
+		AllowMethods: []string{"POST", "GET", "DELETE", "PUT", "PATCH"},
 		AllowHeaders: []string{"*"},
 	}))
 	loginRepo := login.NewRepository(s.DB)
@@ -29,6 +29,7 @@ func (s *server) SetupRouter() {
 	s.Router.GET("/getChecklistPengajuanFiltered", checklistPencairanHandler.FindPengajuanByFilter)
 	s.Router.GET("/getBranchList", checklistPencairanHandler.GetBranchList)
 	s.Router.GET("/getCompanyList", checklistPencairanHandler.GetCompanyList)
+	s.Router.PATCH("/updateApprovalStatus", checklistPencairanHandler.UpdateApprovalStatus)
 
 	generateCustomerRepo := generateCustomer.NewRepository(s.DB)
 	generateCustomerService := generateCustomer.NewService(generateCustomerRepo)

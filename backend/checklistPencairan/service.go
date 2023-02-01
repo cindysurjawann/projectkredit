@@ -11,6 +11,7 @@ type Service interface {
 	FindPengajuanByFilter(approval_status string, branch string, company string, startDate time.Time, endDate time.Time) ([]model.CustomerDataTab, int, error)
 	GetBranchList() ([]model.BranchTab, int, error)
 	GetCompanyList() ([]model.MstCompanyTab, int, error)
+	UpdateApprovalStatus(CustomerDataTabUpdate []model.CustomerDataTab, approval_status string) ([]model.CustomerDataTab, int, error)
 }
 
 type service struct {
@@ -51,4 +52,12 @@ func (s *service) GetCompanyList() ([]model.MstCompanyTab, int, error) {
 		return nil, http.StatusInternalServerError, err
 	}
 	return mct, http.StatusOK, nil
+}
+
+func (s *service) UpdateApprovalStatus(CustomerDataTabUpdate []model.CustomerDataTab, approval_status string) ([]model.CustomerDataTab, int, error) {
+	cdt, err := s.repo.UpdateApprovalStatus(CustomerDataTabUpdate, approval_status)
+	if err != nil {
+		return nil, http.StatusInternalServerError, err
+	}
+	return cdt, http.StatusOK, nil
 }

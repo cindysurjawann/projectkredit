@@ -105,3 +105,25 @@ func (h *Handler) GetCompanyList(c *gin.Context) {
 		"mst_company_tab": mct,
 	})
 }
+
+func (h *Handler) UpdateApprovalStatus(c *gin.Context) {
+	var Input UpdateApprovalStatusRequest
+
+	if err := c.ShouldBindJSON(&Input); err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	cdt, status, err := h.Service.UpdateApprovalStatus(Input.CustomerDataTab, Input.ApprovalStatus)
+	if err != nil {
+		c.JSON(status, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(status, gin.H{
+		"message":         "success",
+		"mst_company_tab": cdt,
+	})
+}

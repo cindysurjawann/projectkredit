@@ -12,12 +12,14 @@ export default class Pencairan extends Component {
       companyList: [],
       dataChecked: [],
       show: false,
-      modalMessage: "Ini Validasi",
+      showGreen: false,
+      modalMessage: "",
     };
   }
 
-  handleClose = () => this.setState({ show: false })
+  handleClose = () => this.setState({ show: false, showGreen: false })
   handleShow = () => this.setState({ show: true })
+  handleShowGreen = () => this.setState({ showGreen: true })
   setAlertMessage = (modalMessage) => this.setState({ modalMessage })
 
   componentDidMount() {
@@ -31,7 +33,6 @@ export default class Pencairan extends Component {
       .then(res => {
         const checklistPengajuan = res.data.customer_data_tab;
         this.setState({ checklistPengajuan });
-        console.log(this.state.checklistPengajuan)
       })
   }
 
@@ -40,7 +41,6 @@ export default class Pencairan extends Component {
       .then(res => {
         const checklistPengajuan = res.data.customer_data_tab;
         this.setState({ checklistPengajuan });
-        console.log(this.state.checklistPengajuan)
       })
   }
 
@@ -60,20 +60,36 @@ export default class Pencairan extends Component {
       })
   }
 
-  dataChecked = (ppk, event) => {
+  updateDataChecked = (ppk, event) => {
     if (event.target.checked) {
-      var dataChecked = [...this.state.dataChecked, { ppk: ppk }]
-      this.setState({ dataChecked })
-    }
-    else {
-      var data = this.state.dataChecked
-      data = data.filter((j) => j.ppk !== ppk)
-      this.setState({ dataChecked: data })
+      var dataChecked1 = [...this.state.dataChecked, { ppk }]
+      this.setState({ dataChecked: dataChecked1 })
+    } else {
+      var dataChecked2 = this.state.dataChecked
+      dataChecked2 = dataChecked2.filter((i) => i.ppk !== ppk)
+      this.setState({ dataChecked: dataChecked2 })
     }
 
   }
 
-  handleSubmit = async (e) => {
+  updateApprovalStatus = (approval_status) => {
+    if (this.state.dataChecked.length === 0) {
+      this.setAlertMessage("Pilih data yang diapprove terlebih dahulu!")
+      this.handleShow()
+    } else {
+      axios.patch(`http://localhost:8080/updateApprovalStatus`, {
+        customer_data_tab: this.state.dataChecked,
+        approval_status: approval_status
+      }).then(() => {
+        this.setState({ dataChecked: [] })
+        this.setAlertMessage("Approval berhasil!")
+        this.handleShowGreen()
+        this.getChecklistPengajuan()
+      })
+    }
+  }
+
+  handleSubmit = (e) => {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
 
@@ -91,7 +107,6 @@ export default class Pencairan extends Component {
   }
 
   render() {
-    console.log(this.state.currentDate)
     if (this.state.checklistPengajuan != null) {
       var dataPengajuan = this.state.checklistPengajuan.map(
         (dataPengajuan, index) => (
@@ -107,7 +122,7 @@ export default class Pencairan extends Component {
             <td>{dataPengajuan.LoanDataTab.monthly_payment}</td>
             <td>{dataPengajuan.channeling_company}</td>
             <td>{dataPengajuan.LoanDataTab.branch}</td>
-            <td><input type={"checkbox"} onChange={(e) => this.dataChecked(dataPengajuan.ppk, e)}></input></td>
+            <td><input type={"checkbox"} onChange={(e) => this.updateDataChecked(dataPengajuan.ppk, e)}></input></td>
           </tr>
         )
       )
@@ -193,11 +208,19 @@ export default class Pencairan extends Component {
                 {dataPengajuan}
               </tbody>
             </Table>
+            <Button className="filterBtn" onClick={() => this.updateApprovalStatus("0")}>Approve</Button>
           </div>
         </div>
 
         <Modal centered show={this.state.show} onHide={this.handleClose}>
           <Modal.Header closeButton className="backgroundRed">
+            <Modal.Title className="text-white"></Modal.Title>
+          </Modal.Header>
+          <Modal.Body>{this.state.modalMessage}</Modal.Body>
+        </Modal>
+
+        <Modal centered show={this.state.showGreen} onHide={this.handleClose}>
+          <Modal.Header closeButton className="backgroundGreen">
             <Modal.Title className="text-white"></Modal.Title>
           </Modal.Header>
           <Modal.Body>{this.state.modalMessage}</Modal.Body>
