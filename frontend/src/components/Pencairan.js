@@ -14,6 +14,7 @@ export default class Pencairan extends Component {
       show: false,
       showGreen: false,
       modalMessage: "",
+      checkboxes: [].fill(false),
     };
   }
 
@@ -21,6 +22,14 @@ export default class Pencairan extends Component {
   handleShow = () => this.setState({ show: true })
   handleShowGreen = () => this.setState({ showGreen: true })
   setAlertMessage = (modalMessage) => this.setState({ modalMessage })
+  handleCheckbox = (index) => {
+    const newCheckboxes = [...this.state.checkboxes];
+    newCheckboxes[index] = !newCheckboxes[index];
+    this.setState({ checkboxes: newCheckboxes });
+  }
+  clearCheckboxes = () => {
+    this.setState({ checkboxes: [].fill(false) });
+  }
 
   componentDidMount() {
     this.getBranchList()
@@ -60,7 +69,7 @@ export default class Pencairan extends Component {
       })
   }
 
-  updateDataChecked = (ppk, event) => {
+  updateDataChecked = (ppk, event, index) => {
     if (event.target.checked) {
       var dataChecked1 = [...this.state.dataChecked, { ppk }]
       this.setState({ dataChecked: dataChecked1 })
@@ -69,7 +78,7 @@ export default class Pencairan extends Component {
       dataChecked2 = dataChecked2.filter((i) => i.ppk !== ppk)
       this.setState({ dataChecked: dataChecked2 })
     }
-
+    this.handleCheckbox(index)
   }
 
   updateApprovalStatus = (approval_status) => {
@@ -85,6 +94,7 @@ export default class Pencairan extends Component {
         this.setAlertMessage("Approval berhasil!")
         this.handleShowGreen()
         this.getChecklistPengajuan()
+        this.clearCheckboxes()
       })
     }
   }
@@ -122,7 +132,7 @@ export default class Pencairan extends Component {
             <td>{dataPengajuan.LoanDataTab.monthly_payment}</td>
             <td>{dataPengajuan.channeling_company}</td>
             <td>{dataPengajuan.LoanDataTab.branch}</td>
-            <td><input type={"checkbox"} onChange={(e) => this.updateDataChecked(dataPengajuan.ppk, e)}></input></td>
+            <td><input type={"checkbox"} checked={this.state.checkboxes[index]} onChange={(e) => this.updateDataChecked(dataPengajuan.ppk, e, index)}></input></td>
           </tr>
         )
       )
@@ -209,6 +219,7 @@ export default class Pencairan extends Component {
               </tbody>
             </Table>
             <Button className="filterBtn" onClick={() => this.updateApprovalStatus("0")}>Approve</Button>
+
           </div>
         </div>
 

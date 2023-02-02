@@ -2,6 +2,7 @@ package api
 
 import (
 	"kredit/backend/checklistPencairan"
+	"kredit/backend/drawdownReport"
 	"kredit/backend/generateCustomer"
 	"kredit/backend/generateSkala"
 	"kredit/backend/login"
@@ -30,6 +31,12 @@ func (s *server) SetupRouter() {
 	s.Router.GET("/getBranchList", checklistPencairanHandler.GetBranchList)
 	s.Router.GET("/getCompanyList", checklistPencairanHandler.GetCompanyList)
 	s.Router.PATCH("/updateApprovalStatus", checklistPencairanHandler.UpdateApprovalStatus)
+
+	drawdownReportRepo := drawdownReport.NewRepository(s.DB)
+	drawdownReportService := drawdownReport.NewService(drawdownReportRepo)
+	drawdownReportHandler := drawdownReport.NewHandler(drawdownReportService)
+	s.Router.GET("/getDrawdownReport", drawdownReportHandler.GetDrawdownReport)
+	s.Router.GET("/getDrawdownReportFiltered", drawdownReportHandler.GetDrawdownReportByFilter)
 
 	generateCustomerRepo := generateCustomer.NewRepository(s.DB)
 	generateCustomerService := generateCustomer.NewService(generateCustomerRepo)
