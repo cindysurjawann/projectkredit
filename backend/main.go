@@ -1,8 +1,17 @@
 package main
 
-import "fmt"
+import (
+	"kredit/backend/api"
+
+	_ "github.com/joho/godotenv/autoload"
+)
 
 func main() {
-	data := "Hello World"
-	fmt.Println(data)
+	db, err := api.SetupDB()
+	if err != nil {
+		panic(err)
+	}
+
+	server := api.MakeServer(db)
+	server.RunServer()
 }
