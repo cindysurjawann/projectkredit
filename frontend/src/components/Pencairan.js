@@ -164,7 +164,7 @@ export default class Pencairan extends Component {
 
         <div className="container-fluid">
           <div className="status-container">
-            <Form onSubmit={(e) => this.handleSubmit(e)} className="filterContainer">
+            <Form onSubmit={(e) => this.handleSubmit(e)} className="formContainer">
               <Row className="d-flex align-items-center justify-content-center">
                 <Col className="d-flex align-items-center gap-2 justify-content mb-3">
                   <label>Branch:</label>
@@ -194,7 +194,7 @@ export default class Pencairan extends Component {
                   </FormGroup>
                 </Col>
               </Row>
-              <Button type='submit' className="filterBtn">Submit</Button>
+              <Button type='submit' className="defaultBtn">Submit</Button>
             </Form>
 
             <Table striped bordered hover className="table">
@@ -218,7 +218,7 @@ export default class Pencairan extends Component {
                 {dataPengajuan}
               </tbody>
             </Table>
-            <Button className="filterBtn" onClick={() => this.updateApprovalStatus("0")}>Approve</Button>
+            <Button className="defaultBtn" onClick={() => this.updateApprovalStatus("0")}>Approve</Button>
 
           </div>
         </div>

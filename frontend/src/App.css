@@ -651,13 +651,13 @@ table {
   padding-right: 2rem;
 }
 
-.filterContainer {
+.formContainer {
   background-color: #ededed;
   padding: 1rem;
   border-radius: 10px;
 }
 
-.filterBtn {
+.defaultBtn {
   width: 150px !important;
   background-color: #cc100f !important;
 }

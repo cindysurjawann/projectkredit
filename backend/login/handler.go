@@ -70,6 +70,32 @@ func (h *Handler) Login(c *gin.Context) {
 	})
 }
 
+func (h *Handler) MatchPassword(c *gin.Context) {
+	var req LoginRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		messageErr := ParseError(err)
+		if messageErr == nil {
+			messageErr = []string{message}
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"error": messageErr})
+		return
+	}
+	res, status, err := h.Service.MatchPassword(req)
+	if err != nil {
+		c.JSON(status, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(status, gin.H{
+		"data": map[string]any{
+			"name":    res.Name,
+			"user_id": res.UserId,
+		},
+	})
+}
+
 func (h *Handler) Register(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -81,6 +107,29 @@ func (h *Handler) Register(c *gin.Context) {
 		return
 	}
 	_, status, err := h.Service.Register(req)
+	if err != nil {
+		c.JSON(status, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(status, gin.H{
+		"message": "success",
+	})
+}
+
+func (h *Handler) UpdatePassword(c *gin.Context) {
+	var req LoginRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		messageErr := ParseError(err)
+		if messageErr == nil {
+			messageErr = []string{message}
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"error": messageErr})
+		return
+	}
+	_, status, err := h.Service.UpdatePassword(req)
 	if err != nil {
 		c.JSON(status, gin.H{
 			"message": err.Error(),

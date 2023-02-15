@@ -22,6 +22,8 @@ func (s *server) SetupRouter() {
 	s.Router.GET("/findUser", loginHandler.FindUser)
 	s.Router.POST("/register", loginHandler.Register)
 	s.Router.POST("/login", loginHandler.Login)
+	s.Router.POST("/matchPassword", loginHandler.MatchPassword)
+	s.Router.PATCH("/updatePassword", loginHandler.UpdatePassword)
 
 	checklistPencairanRepo := checklistPencairan.NewRepository(s.DB)
 	checklistPencairanService := checklistPencairan.NewService(checklistPencairanRepo)

@@ -24,7 +24,6 @@ import Laporan from "./components/Laporan";
 import ChangePassword from "./components/ChangePassword";
 import Popup from 'reactjs-popup';
 import axios from "axios";
-import Home from './components/Home';
 
 function App() {
   const [isLoggedIn, setLogin] = useState()
@@ -162,7 +161,7 @@ function App() {
             </div>
             <div className="content">
               <Routes>
-                <Route path="/" element={<Home />} />
+                <Route path="/" />
                 <Route path="/Pencairan" element={<Pencairan />} />
                 <Route path="/Laporan" element={<Laporan />} />
                 <Route path="/ChangePassword" element={<ChangePassword />} />

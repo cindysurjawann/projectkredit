@@ -10,6 +10,7 @@ import (
 type LoginRepository interface {
 	FindUser(userId string) (model.User, error)
 	AddUser(user model.User) (model.User, error)
+	UpdatePassword(user model.User) (model.User, error)
 }
 
 type repository struct {
@@ -34,6 +35,16 @@ func (r *repository) FindUser(userId string) (model.User, error) {
 
 func (r *repository) AddUser(user model.User) (model.User, error) {
 	res := r.db.Create(&user)
+	if res.Error != nil {
+		return model.User{}, res.Error
+	}
+
+	return user, nil
+}
+
+func (r *repository) UpdatePassword(user model.User) (model.User, error) {
+	var User model.User
+	res := r.db.Model(&User).Where("user_id=?", user.UserId).Update("password", user.Password)
 	if res.Error != nil {
 		return model.User{}, res.Error
 	}
