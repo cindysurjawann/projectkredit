@@ -113,7 +113,7 @@ function App() {
             <div>
               <Nav className="flex-column" id="nav-trigger">
                 <div className="d-flex align-items-center menubar-brand">
-                  <img id="image-trigger" onClick={() => collapseNavbar()} src={Logo} alt={"Logo Action Figure "}></img>
+                  <img id="image-trigger" onClick={() => collapseNavbar()} src={Logo} alt={"Logo BSIM"}></img>
                   <div className="d-flex flex-column">
                     <h3 className="eventCollapse text-white">Pencairan Kredit</h3>
                     <h6 className="eventCollapse text-white">Hello, {userName}</h6>
